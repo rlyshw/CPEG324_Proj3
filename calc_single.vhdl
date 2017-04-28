@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 -- Load immediate first 
 -- last 4 bits of intstruction input are assigned to an immediate value 
@@ -55,9 +56,11 @@ architecture behavioral of calc_single is
 begin
 	-- instantiation of component
 	add_sub_8_0 : add_sub_8 port map(In1 => in1, In2 => in2, Output => output);
+	-- sign extended immediate value
+	--sign_extended_immediate <= std_logic_vector(resize(signed(immediate), sign_extended_immediate'length));
 
-	-- Fetch and decode the instruction, this process should be clocked
 	
+	-- Fetch and decode the instruction, this process should be clocked
 	calc_process : process(Clock) is
 	
 	-- process variables 
@@ -82,23 +85,34 @@ begin
 			elsif (source_register = "10") then in1 <= register2;
 			else in1 <= register3;
 			end if;
+			-- source register contents are only subtracted from, therefore always positive
 			
+			-- target register contents can be negative
+			if (op_type = '0') then 
+				-- add instruction
+				if (target_register = "00") then in2 <= register0;
+				elsif (target_register = "01") then in2 <= register1;
+				elsif (target_register = "10") then in2 <= register2;
+				else in2 <= register3;
+				end if;
+				
+				if (destination_register = "00") then register0 <= output;
+				elsif (destination_register = "01") then register1 <= output;
+				elsif (destination_register = "10") then register2 <= output;
+				else register3 <= output;
+				end if;
+				
+			else 
 			
-			if (target_register = "00") then in2 <= register0;
-			elsif (target_register = "01") then in2 <= register1;
-			elsif (target_register = "10") then in2 <= register2;
-			else in2 <= register3;
+				-- determine write back for ALU output
+				if (destination_register = "00") then register0 <= output;
+				elsif (destination_register = "01") then register1 <= output;
+				elsif (destination_register = "10") then register2 <= output;
+				else register3 <= output;
+				end if;
+			
 			end if;
-			
-			-- determine write back for ALU output
-			if (destination_register = "00") then register0 <= output;
-			elsif (destination_register = "01") then register1 <= output;
-			elsif (destination_register = "10") then register2 <= output;
-			else register3 <= output;
-			end if;
-			
-			
-			--			
+					
 		else 
 			-- load, print or branch instruction
 			
@@ -108,8 +122,9 @@ begin
 			
 			if (op_type = '0') then 	
 				-- load immediate instruction
-			
 				-- the immediate must be sign extended then loaded into the target register
+				sign_extended_immediate <= std_logic_vector(resize(signed(immediate), sign_extended_immediate'length));
+				
 				-- second input of the ALU gets the sign extended immediate, add 0 to it
 				in1 <= "00000000";
 				in2 <= sign_extended_immediate;
