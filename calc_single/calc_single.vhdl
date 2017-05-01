@@ -12,144 +12,136 @@ use ieee.numeric_std.all;
 
 entity calc_single is
 port(	Inst : in std_logic_vector(8 downto 0);
-			Clock : in std_logic
+	    GCLOCK : in std_logic; --global clock
+        outp  : out std_logic_vector(8 downto 0)
 		);
 end calc_single;
 
 architecture behavioral of calc_single is
-	-- components for the single cycle calculator 
-	
+    --internal components
+
 	-- ALU for 8 bit adding/subtracting/loading immediates
-	-- delcaration 
 	component add_sub_8 
 	port(	In1, In2 : in std_logic_vector(7 downto 0);
 				Output : out std_logic_vector(7 downto 0)
 	);
-	end component add_sub_8;
-	
-	
-	
-	-- four 8 bit registers
-	signal register0 : std_logic_vector(7 downto 0) := "00000000";
-	signal register1 : std_logic_vector(7 downto 0) := "00000000";
-	signal register2 : std_logic_vector(7 downto 0) := "00000000";
-	signal register3 : std_logic_vector(7 downto 0) := "00000000";
-	
-	-- register addresses
-	signal source_register : std_logic_vector(1 downto 0) := Inst(5 downto 4);
-	signal target_register : std_logic_vector(1 downto 0) := Inst(3 downto 2);
-	signal destination_register : std_logic_vector(1 downto 0) := Inst(1 downto 0);
-	
-	-- immediate and sign-extended immediate signals 
-	signal immediate : std_logic_vector(3 downto 0) := Inst(3 downto 0);
-	signal sign_extended_immediate : std_logic_vector(7 downto 0);
-	
-	-- instruction-type bit
-	signal instruction_type : std_logic := Inst(7);
-	signal op_type : std_logic := Inst(6);
-	
-	-- internal signals for ALU
-	signal in1 : std_logic_vector(7 downto 0) := "00000000";
-	signal in2 : std_logic_vector(7 downto 0) := "00000000";
-	signal output : std_logic_vector(7 downto 0) := "00000000";
+    end component add_sub_8;
+
+    -- InstrFetch component
+    --  sequential(?) circuit to retrieve instructions
+    component InstrFetch
+    port(   clock: in std_logic;
+            instr: out std_logic_vector(7 downto 0)
+        );
+    end component InstrFetch;
+
+    -- RegisterFile component
+    --  sequential circuit to control reading/writing registers
+    component RegFile
+        port(   rs, rt, rd : in  std_logic_vector(1 downto 0);
+                rw         : in  std_logic_vector(3 downto 0);
+                clk        : in std_logic;
+                rs_content, rt_content : out std_logic_vector(3 downto 0)
+            );
+    end component RegFile;
+
+    -- Print Module
+    --   combination circuit to print
+    component printer
+        port(   en : in std_logic;
+                value: in std_logic_vector(3 downto 0)
+            );
+    end component printer;
+    
+    -- Branching hardware
+    --   combinational circuit to control branching
+    component brancher
+        port(   skip_value : in std_logic_vector(1 downto 0);
+                clk        : out std_logic;
+                skip_sel   : out std_logic
+            );
+    end component brancher;
+
+    component twoscomp
+        port( inp : in std_logic_vector(3 downto 0);
+              outp : out std_logic_vector(3 downto 0)
+            );
+    end component twoscomp;
+    
+    signal clk : std_logic := '0';
+    signal instr : std_logic_vector(7 downto 0);
+    signal rd : std_logic_vector(1 downto 0);
+    signal write_content,rs_content, rt_content : std_logic_vector(3 downto 0);
+    signal print_enable : std_logic := '0';
+    signal br_val : std_logic_vector(1 downto 0);
+    signal skip_sel : std_logic := '0';
+
+    signal adder_pos, adder_neg, adder_out : std_logic_vector(7 downto 0);
+
+    signal pre_adder_neg,pre_adder_neg_twoscomp : std_logic_vector(3 downto 0);
 	
 begin
 	-- instantiation of component
-	add_sub_8_0 : add_sub_8 port map(In1 => in1, In2 => in2, Output => output);
-	-- sign extended immediate value
-	--sign_extended_immediate <= std_logic_vector(resize(signed(immediate), sign_extended_immediate'length));
+    fetcher : InstrFetch port map(clock => clk);
+    registerfile : RegFile port map(
+                                  rs=>instr(5 downto 4), 
+                                  rt=>instr(3 downto 2), 
+                                  rd=>rd, rw=>write_content, clk=>CLK,
+                                  rs_content => rs_content,
+                                  rt_content => rt_content
+                              );
+    adder : add_sub_8 port map( In1 => adder_pos, In2 => adder_neg, Output => adder_out);
+    printModule : printer port map(en=>print_enable,value=>rt_content);
 
+    branchModule : brancher port map(skip_value=>br_val,clk=>clk,skip_sel=>skip_sel);
+
+    twos_comp : twoscomp port map(inp => pre_adder_neg, outp => pre_adder_neg_twoscomp);
 	
-	-- Fetch and decode the instruction, this process should be clocked
-	calc_process : process(Clock) is
-	
-	-- process variables 
-	
-	begin 
-	
-	if (rising_edge(Clock)) then 
-		instruction_type <= Inst(7);		-- determine instruction type
-		op_type <= Inst(6);					-- determine operation type 
-		
-		if (instruction_type = '0') then
-			-- add/subtract instruction 
-			-- source, target , destination register decode
-			
-			source_register <= Inst(5 downto 4);
-			target_register <= Inst (3 downto 2);
-			destination_register <= Inst(1 downto 0);
-			
-			-- set ALU inputs 
-			if (source_register = "00") then in1 <= register0;
-			elsif (source_register = "01") then in1 <= register1;
-			elsif (source_register = "10") then in1 <= register2;
-			else in1 <= register3;
-			end if;
-			-- source register contents are only subtracted from, therefore always positive
-			
-			-- target register contents can be negative
-			if (op_type = '0') then 
-				-- add instruction
-				if (target_register = "00") then in2 <= register0;
-				elsif (target_register = "01") then in2 <= register1;
-				elsif (target_register = "10") then in2 <= register2;
-				else in2 <= register3;
-				end if;
-				
-				if (destination_register = "00") then register0 <= output;
-				elsif (destination_register = "01") then register1 <= output;
-				elsif (destination_register = "10") then register2 <= output;
-				else register3 <= output;
-				end if;
-				
-			else 
-			
-				-- determine write back for ALU output
-				if (destination_register = "00") then register0 <= output;
-				elsif (destination_register = "01") then register1 <= output;
-				elsif (destination_register = "10") then register2 <= output;
-				else register3 <= output;
-				end if;
-			
-			end if;
-					
-		else 
-			-- load, print or branch instruction
-			
-			target_register <= Inst(5 downto 4);
-			immediate <= Inst(3 downto 0);
-			-- perform sign extension
-			
-			if (op_type = '0') then 	
-				-- load immediate instruction
-				-- the immediate must be sign extended then loaded into the target register
-				sign_extended_immediate <= std_logic_vector(resize(signed(immediate), sign_extended_immediate'length));
-				
-				-- second input of the ALU gets the sign extended immediate, add 0 to it
-				in1 <= "00000000";
-				in2 <= sign_extended_immediate;
-		
-		
-				-- assign the output of ALU to target register based on address 
-				if (target_register = "00") then register0 <= output;
-				elsif (target_register = "01") then register1 <= output;
-				elsif (target_register = "10") then register2 <= output;
-				else register3 <= output;
-				end if;
-				
-			else 
-				-- branch or print instruction
-				
-				
-			end if;
-			
-		end if;
-		
-	end if;
-	
-	end process calc_process;
-		
-	
+    --all the modules defined, wire it up
+     calc_process : process(GCLOCK) is begin
+        case instr(7) is --INST_SEL mux
+            when '1' => rd <= instr(3 downto 2);
+            when '0' => rd <= instr(1 downto 0);
+            when others => rd <= "ZZ";
+        end case;
+
+        case instr(7) is  --adder_pos mux
+            when '0' => adder_pos <= std_logic_vector(resize(signed(rs_content), adder_pos'length));
+            when '1' => adder_pos <= "00000000";
+            when others => adder_pos <= "ZZZZZZZZ";
+        end case;
+
+        case instr(7) is
+            when '0' => pre_adder_neg <= rt_content;
+            when '1' => pre_adder_neg <= instr(3 downto 0); --immediate value
+            when others => pre_adder_neg <= "ZZZZ";
+        end case;
+
+        case instr(7 downto 6) is -- this is the mux before the adder's negative terminal
+            when "01" => adder_neg <= std_logic_vector(resize(signed(pre_adder_neg_twoscomp),adder_neg'length));
+            when others => adder_neg <= std_logic_vector(resize(signed(rt_content),adder_neg'length));
+        end case;
+
+        if (adder_out = "0000000" and instr(7)='1' and instr(6)='1') then -- print module enable
+            print_enable <= '1';
+        else
+            print_enable <= '0';
+        end if;
+
+        if( rt_content = "0000" ) then -- branching mux
+            br_val <= adder_out(1 downto 0);
+        else 
+            br_val <= "00";
+        end if;
+
+        case skip_sel is -- IF clock MUX
+            when '0' => clk <= clk;
+            when '1' => clk <= '0';
+            when others => clk <= 'Z';
+        end case;
+
+    end process;
+
 end architecture behavioral;
 
 
