@@ -11,9 +11,9 @@ use ieee.numeric_std.all;
 
 
 entity calc_single is
-port(	Inst : in std_logic_vector(8 downto 0);
+port(	Inst : in std_logic_vector(7 downto 0);
 	    GCLOCK : in std_logic; --global clock
-        outp  : out std_logic_vector(8 downto 0)
+        outp  : out std_logic_vector(7 downto 0)
 		);
 end calc_single;
 
