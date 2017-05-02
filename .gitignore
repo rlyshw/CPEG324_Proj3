@@ -1,1 +1,3 @@
+calc_single_tb
+*.o
 build/
