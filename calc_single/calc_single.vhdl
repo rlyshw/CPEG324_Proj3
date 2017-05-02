@@ -6,10 +6,6 @@ use ieee.numeric_std.all;
 -- last 4 bits of intstruction input are assigned to an immediate value 
 -- target register is determined by instr(5 downto 4)
 
-
--- have a component for the 8 bit ALU (add/sub)
-
-
 entity calc_single is
 port(	Inst : in std_logic_vector(7 downto 0);
 	    GCLOCK : in std_logic; --global clock
@@ -30,8 +26,9 @@ architecture behavioral of calc_single is
     -- InstrFetch component
     --  sequential(?) circuit to retrieve instructions
     component InstrFetch
-    port(   clock: in std_logic;
-            instr: out std_logic_vector(7 downto 0)
+    port(   inst: in std_logic_vector(7 downto 0);
+            clock: in std_logic;
+            inst_out: out std_logic_vector(7 downto 0)
         );
     end component InstrFetch;
 
@@ -85,7 +82,8 @@ architecture behavioral of calc_single is
 begin
 	-- instantiation of component
     clk <= GCLOCK;
-    fetcher : InstrFetch port map(clock => clk);
+
+    fetcher : InstrFetch port map(inst=>inst,clock => clk,inst_out=>instr);
     registerfile : RegFile port map(
                                   rs=>instr(5 downto 4), 
                                   rt=>instr(3 downto 2), 
