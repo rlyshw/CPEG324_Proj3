@@ -39,9 +39,9 @@ architecture behavioral of calc_single is
     --  sequential circuit to control reading/writing registers
     component RegFile
         port(   rs, rt, rd : in  std_logic_vector(1 downto 0);
-                rw         : in  std_logic_vector(3 downto 0);
+                rw         : in  std_logic_vector(7 downto 0);
                 clk        : in std_logic;
-                rs_content, rt_content : out std_logic_vector(3 downto 0)
+                rs_content, rt_content : out std_logic_vector(7 downto 0)
             );
     end component RegFile;
 
@@ -49,7 +49,7 @@ architecture behavioral of calc_single is
     --   combination circuit to print
     component printer
         port(   en : in std_logic;
-                value: in std_logic_vector(3 downto 0)
+                value: in std_logic_vector(7 downto 0)
             );
     end component printer;
     
@@ -63,30 +63,33 @@ architecture behavioral of calc_single is
     end component brancher;
 
     component twoscomp
-        port( inp : in std_logic_vector(3 downto 0);
-              outp : out std_logic_vector(3 downto 0)
+        port( inp : in std_logic_vector(7 downto 0);
+              outp : out std_logic_vector(7 downto 0)
             );
     end component twoscomp;
     
     signal clk : std_logic := '0';
     signal instr : std_logic_vector(7 downto 0);
     signal rd : std_logic_vector(1 downto 0);
-    signal write_content,rs_content, rt_content : std_logic_vector(3 downto 0);
+    signal write_content,rs_content, rt_content : std_logic_vector(7 downto 0);
     signal print_enable : std_logic := '0';
     signal br_val : std_logic_vector(1 downto 0);
     signal skip_sel : std_logic := '0';
 
     signal adder_pos, adder_neg, adder_out : std_logic_vector(7 downto 0);
 
-    signal pre_adder_neg,pre_adder_neg_twoscomp : std_logic_vector(3 downto 0);
+    signal pre_adder_neg,pre_adder_neg_twoscomp : std_logic_vector(7 downto 0);
+
+    signal op_sel : std_logic_vector(2 downto 0);
 	
 begin
 	-- instantiation of component
+    clk <= GCLOCK;
     fetcher : InstrFetch port map(clock => clk);
     registerfile : RegFile port map(
                                   rs=>instr(5 downto 4), 
                                   rt=>instr(3 downto 2), 
-                                  rd=>rd, rw=>write_content, clk=>CLK,
+                                  rd=>rd, rw=>write_content, clk=>GCLOCK,
                                   rs_content => rs_content,
                                   rt_content => rt_content
                               );
@@ -96,30 +99,32 @@ begin
     branchModule : brancher port map(skip_value=>br_val,clk=>clk,skip_sel=>skip_sel);
 
     twos_comp : twoscomp port map(inp => pre_adder_neg, outp => pre_adder_neg_twoscomp);
+
+    op_sel <= pre_adder_neg(7)&instr(7 downto 6);
 	
     --all the modules defined, wire it up
      calc_process : process(GCLOCK) is begin
-        case instr(7) is --INST_SEL mux
+        case instr(7) is --RD_SEL mux
             when '1' => rd <= instr(3 downto 2);
             when '0' => rd <= instr(1 downto 0);
             when others => rd <= "ZZ";
         end case;
 
         case instr(7) is  --adder_pos mux
-            when '0' => adder_pos <= std_logic_vector(resize(signed(rs_content), adder_pos'length));
+            when '0' => adder_pos <= rs_content;
             when '1' => adder_pos <= "00000000";
             when others => adder_pos <= "ZZZZZZZZ";
         end case;
 
-        case instr(7) is
+        case instr(7) is --val_sel
             when '0' => pre_adder_neg <= rt_content;
-            when '1' => pre_adder_neg <= instr(3 downto 0); --immediate value
-            when others => pre_adder_neg <= "ZZZZ";
+            when '1' => pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length)); --immediate value
+            when others => pre_adder_neg <= "ZZZZZZZZ";
         end case;
 
-        case instr(7 downto 6) is -- this is the mux before the adder's negative terminal
-            when "01" => adder_neg <= std_logic_vector(resize(signed(pre_adder_neg_twoscomp),adder_neg'length));
-            when others => adder_neg <= std_logic_vector(resize(signed(rt_content),adder_neg'length));
+        case op_sel is -- this is the mux before the adder's negative terminal, it depends on the sign of rt_content
+            when "001" => adder_neg <= pre_adder_neg_twoscomp;
+            when others => adder_neg <= rt_content;
         end case;
 
         if (adder_out = "0000000" and instr(7)='1' and instr(6)='1') then -- print module enable
@@ -128,7 +133,7 @@ begin
             print_enable <= '0';
         end if;
 
-        if( rt_content = "0000" ) then -- branching mux
+        if( rt_content = "0000000000" and instr(7)='1' and instr(6)='1' ) then -- branching mux
             br_val <= adder_out(1 downto 0);
         else 
             br_val <= "00";

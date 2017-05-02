@@ -1,16 +1,32 @@
 test: calc_tb
 
-calc_tb: add_sub_8.o calc_single.o calc_single_tb.o #InstrFetch RegFile printer brancher twoscomp
+calc_tb: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/printer.o ./build/brancher.o ./build/twoscomp.o ./build/calc_single.o ./build/calc_single_tb.o 
 	ghdl -e --workdir=./build --ieee=standard calc_single_tb
 	ghdl -r --workdir=./build --ieee=standard calc_single_tb
 
-add_sub_8.o: ./add_sub_8/add_sub_8.vhdl
+./build/add_sub_8.o: ./add_sub_8/add_sub_8.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./add_sub_8/add_sub_8.vhdl
 
-calc_single.o: ./calc_single/calc_single.vhdl
+./build/InstrFetch.o: ./InstrFetch/InstrFetch.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./InstrFetch/InstrFetch.vhdl
+
+./build/RegFile.o: ./RegFile/RegFile.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./RegFile/RegFile.vhdl
+
+./build/printer.o: ./printer/printer.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./printer/printer.vhdl
+
+./build/brancher.o: ./brancher/brancher.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./brancher/brancher.vhdl
+
+./build/twoscomp.o: ./twoscomp/twoscomp.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./twoscomp/twoscomp.vhdl
+
+./build/calc_single.o: ./calc_single/calc_single.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./calc_single/calc_single.vhdl
 
-calc_single_tb.o: ./calc_single/calc_single_tb.vhdl
+
+./build/calc_single_tb.o: ./calc_single/calc_single_tb.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./calc_single/calc_single_tb.vhdl
 
 clean:
