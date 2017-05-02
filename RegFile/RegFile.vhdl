@@ -9,7 +9,8 @@ entity regfile is
         port(   rs, rt, rd : in  std_logic_vector(1 downto 0);
                 rw         : in  std_logic_vector(7 downto 0);
                 clk        : in std_logic;
-                rs_content, rt_content : out std_logic_vector(7 downto 0)
+                rs_content, rt_content : out std_logic_vector(7 downto 0);
+                en : in std_logic
             );
 end regfile;
 

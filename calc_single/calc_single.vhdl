@@ -37,7 +37,7 @@ architecture behavioral of calc_single is
     component RegFile
         port(   rs, rt, rd : in  std_logic_vector(1 downto 0);
                 rw         : in  std_logic_vector(7 downto 0);
-                clk        : in std_logic;
+                clk, en    : in std_logic;
                 rs_content, rt_content : out std_logic_vector(7 downto 0)
             );
     end component RegFile;
@@ -70,7 +70,7 @@ architecture behavioral of calc_single is
     signal rd : std_logic_vector(1 downto 0);
     signal write_content,rs_content, rt_content : std_logic_vector(7 downto 0);
     signal print_enable : std_logic := '0';
-    signal br_val : std_logic_vector(1 downto 0);
+    signal br_val : std_logic_vector(1 downto 0) := "00";
     signal skip_sel : std_logic := '0';
 
     signal adder_pos, adder_neg, adder_out : std_logic_vector(7 downto 0);
@@ -78,10 +78,11 @@ architecture behavioral of calc_single is
     signal pre_adder_neg,pre_adder_neg_twoscomp : std_logic_vector(7 downto 0);
 
     signal op_sel : std_logic_vector(2 downto 0);
+    signal write_enable : std_logic := '0';
 	
 begin
 	-- instantiation of component
-    clk <= GCLOCK;
+    clk <= GCLOCK when skip_sel='0' else '0';
 
     fetcher : InstrFetch port map(inst=>inst,clock => clk,inst_out=>instr);
     registerfile : RegFile port map(
@@ -89,7 +90,8 @@ begin
                                   rt=>instr(3 downto 2), 
                                   rd=>rd, rw=>write_content, clk=>GCLOCK,
                                   rs_content => rs_content,
-                                  rt_content => rt_content
+                                  rt_content => rt_content,
+                                  en => write_enable
                               );
     adder : add_sub_8 port map( In1 => adder_pos, In2 => adder_neg, Output => adder_out);
     printModule : printer port map(en=>print_enable,value=>rt_content);
@@ -102,50 +104,16 @@ begin
 	
     -- adder_neg <= pre_adder_neg;
     write_content <= adder_out;
+    write_enable <= '0' when (instr(6)='1' and instr(7)='1') else '1';
 
-
-    --all the modules defined, wire it up
-     calc_process : process(GCLOCK) is begin
-        adder_neg <= pre_adder_neg;
-        case instr(7) is --RD_SEL mux
-            when '1' => rd <= instr(3 downto 2);
-                        pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length));
-                        adder_pos <= "00000000";
-
-            when '0' => rd <= instr(1 downto 0); 
-                              adder_pos <= rs_content; 
-                              pre_adder_neg <= rt_content;
-
-            when others => rd <= "ZZ";
-                           adder_pos <= "ZZZZZZZZ";
-                           pre_adder_neg <= "ZZZZZZZZ";
-        end case;
-
-
-
-        case op_sel is -- this is the mux before the adder's negative terminal, it depends on the sign of rt_content
-            when "001" => pre_adder_neg <= pre_adder_neg_twoscomp;
-            when others => null;
-        end case;
-
-        if (adder_out = "00000000" and instr(7)='1' and instr(6)='1') then -- print module enable
-            print_enable <= '1';
-        else
-            print_enable <= '0';
-        end if;
-
-        if( rt_content = "00000000" and instr(7)='1' and instr(6)='1' ) then -- branching mux
-            br_val <= adder_out(1 downto 0);
-        else 
-            br_val <= "00";
-        end if;
-
-        case skip_sel is -- IF clock MUX
-            when '0' => clk <= clk;
-            when '1' => clk <= '0';
-            when others => clk <= 'Z';
-        end case;
-    end process;
+    -- MUXES EVERYWHERE
+    print_enable <= '1' when ((adder_out = "00000000") and (instr(7)='1') and (instr(6)='1')) else '0'; --pr_enable mux
+    rd <= instr(3 downto 2) when instr(7)='1' else instr(1 downto 0);--rd mux
+    
+    pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length)) when instr(7)='1' else rt_content;--preadder_neg mux
+    adder_neg <= pre_adder_neg_twoscomp when ((pre_adder_neg(7)='0') and (instr(7)='0') and (instr(6)='1')) else pre_adder_neg;
+    adder_pos <= "00000000" when instr(7)='1' else rs_content; -- the mux before the positive end of the adder
+    br_val <= adder_out(1 downto 0) when ( rt_content = "00000000" and instr(7)='1' and instr(6)='1' ) else "00"; -- branch mux
 
 end architecture behavioral;
 

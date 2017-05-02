@@ -23,24 +23,20 @@ architecture behavioral of brancher is
 	);
     end component add_sub_8;
 
-	signal q : std_logic_vector(1 downto 0);
-	signal d : std_logic_vector(1 downto 0);
+	signal q : std_logic_vector(1 downto 0) := "00";
+	signal d : std_logic_vector(1 downto 0) := "00";
 	signal input_holder : std_logic_vector(7 downto 0);
 	signal output_holder : std_logic_vector(7 downto 0);
-	signal sel : std_logic;
-	signal dec_val : std_logic_vector(1 downto 0);
+	signal sel : std_logic := '0';
+	signal dec_val : std_logic_vector(1 downto 0) := "00";
 begin
 	input_holder<="000000"&q;
 	sub_one : add_sub_8 port map( In1 => input_holder, In2 => "11111111", Output => output_holder);
 	dec_val <= output_holder(1)&output_holder(0);
 	sel <= q(0) or q(1);
+	d <= skip_value when sel='0' else dec_val;
 	process (clk) is begin
 		if rising_edge(clk) then
-			case sel is
-				when '0' => d <= skip_value;
-				when '1' => d <= dec_val;
-				when others => d <= "ZZ";
-			end case;
 			q <= d;
 		end if;
 	end process;
