@@ -46,7 +46,7 @@ begin
 		
 	end if;
 		
-	if (In2(3) = '1') then 
+	if (In2(7) = '1') then 
 		In2_neg := '1';
 			for  i in 0 to 6 loop
 			temp_In2(i) := not In2(i);			-- negate the bits up to the signed bit
