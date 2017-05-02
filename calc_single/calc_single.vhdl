@@ -54,7 +54,7 @@ architecture behavioral of calc_single is
     --   combinational circuit to control branching
     component brancher
         port(   skip_value : in std_logic_vector(1 downto 0);
-                clk        : out std_logic;
+                clk        : in std_logic;
                 skip_sel   : out std_logic
             );
     end component brancher;
@@ -94,7 +94,7 @@ begin
     adder : add_sub_8 port map( In1 => adder_pos, In2 => adder_neg, Output => adder_out);
     printModule : printer port map(en=>print_enable,value=>rt_content);
 
-    branchModule : brancher port map(skip_value=>br_val,clk=>clk,skip_sel=>skip_sel);
+    branchModule : brancher port map(skip_value=>br_val,clk=>GCLOCK,skip_sel=>skip_sel);
 
     twos_comp : twoscomp port map(inp => pre_adder_neg, outp => pre_adder_neg_twoscomp);
 

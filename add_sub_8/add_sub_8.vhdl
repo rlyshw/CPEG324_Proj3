@@ -7,8 +7,7 @@ use ieee.std_logic_1164.all;
 
 entity add_sub_8 is
 port(	In1, In2:	in std_logic_vector (7 downto 0);		-- signed 8 bit input signals 
-			Output : out std_logic_vector (7 downto 0);		-- signed 8 bit output signal 
-			Carry, Underflow : out std_logic								-- overflow and underflow signal
+			Output : out std_logic_vector (7 downto 0)		-- signed 8 bit output signal
 );
 end add_sub_8;
 
@@ -28,8 +27,6 @@ begin
 	
 	begin 
 	
-	Carry <= '0';
-	underflow <= '0';
 	temp_carry := '0';
 	
 	-- first check if either of the inputs is negative 
@@ -76,13 +73,6 @@ begin
 	
 		end loop;
 		
-		-- don't care about overflow anymore
-		if (temp_carry = '1') then 
-			Carry <= '1';
-			
-		end if;
-		--
-		
 		adder_contents(7) <= '0';
 	
 	elsif ((In1_neg = '1') and (In2_neg = '0')) then 
@@ -119,10 +109,6 @@ begin
 	
 		end loop;
 		
-		-- don't care about underflow
-		if (temp_carry = '1') then 
-			Underflow <= '1';
-		end if;
 	--
 	
 		In1_neg := '0';

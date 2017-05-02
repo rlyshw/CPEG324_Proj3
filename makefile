@@ -10,8 +10,14 @@ calc_tb: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/prin
 ./build/InstrFetch.o: ./InstrFetch/InstrFetch.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./InstrFetch/InstrFetch.vhdl
 
-./build/RegFile.o: ./RegFile/RegFile.vhdl
+./build/RegFile.o: ./build/shift_reg_8.o ./RegFile/RegFile.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./RegFile/RegFile.vhdl
+
+./build/shift_reg_8.o: ./build/shift_reg.o ./RegFile/shift_reg_8.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./RegFile/shift_reg_8.vhdl
+
+./build/shift_reg.o: ./RegFile/shift_reg.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./RegFile/shift_reg.vhdl
 
 ./build/printer.o: ./printer/printer.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./printer/printer.vhdl

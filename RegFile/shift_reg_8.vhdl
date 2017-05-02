@@ -36,13 +36,25 @@ architecture structural of shift_reg_8 is
 begin
 
 	-- mapping of components:
-	left_reg : shift_reg port map(I => I_8bit(7 downto 4), SHIFT_LEFT_INPUT => 'U',
-	SHIFT_RIGHT_INPUT => SHIFT_RIGHT_INPUT_8BIT, sel => sel_8bit, clock => clock_8bit, enable => enable_8bit, 
-	O => left_reg_output);
+	left_reg : shift_reg port map(
+		I => I_8bit(7 downto 4), 
+		SHIFT_LEFT_INPUT => 'U',
+		SHIFT_RIGHT_INPUT => SHIFT_RIGHT_INPUT_8BIT, 
+		sel => sel_8bit, 
+		clock => clock_8bit, 
+		enable => enable_8bit, 
+		O => left_reg_output
+	);
 	
-	right_reg : shift_reg port map(I => I_8bit(3 downto 0), SHIFT_LEFT_INPUT => SHIFT_LEFT_INPUT_8BIT,
-	SHIFT_RIGHT_INPUT => 'U', sel => sel_8bit, clock => clock_8bit, enable => enable_8bit, 
-	O => right_reg_output);
+	right_reg : shift_reg port map(
+		I => I_8bit(3 downto 0), 
+		SHIFT_LEFT_INPUT => SHIFT_LEFT_INPUT_8BIT,
+		SHIFT_RIGHT_INPUT => 'U', 
+		sel => sel_8bit, 
+		clock => clock_8bit, 
+		enable => enable_8bit, 
+		O => right_reg_output
+	);
 
 	reg_8bit_content(7) <= left_reg_output(3);
 	reg_8bit_content(6) <= left_reg_output(2);
