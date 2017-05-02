@@ -14,8 +14,8 @@ end instrfetch;
 architecture behavioral of InstrFetch is
 begin
 
+    inst_out <= inst;
     fetch_process : process(clock) is begin
-        inst_out <= inst;
     end process;
     
 

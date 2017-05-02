@@ -65,7 +65,7 @@ begin
 	reg_8bit_content(1) <= right_reg_output(1);
 	reg_8bit_content(0) <= right_reg_output(0);
 	
-	O_8bit <= reg_8bit_content when enable_8bit = '1' else I_8bit;
+	O_8bit <= reg_8bit_content;
 	
 end architecture structural;
 

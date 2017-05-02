@@ -14,17 +14,16 @@ end shift_reg;
 
 architecture behavioral of shift_reg is
 	
-	signal register_content : std_logic_vector(3 downto 0) := I;
+	signal register_content : std_logic_vector(3 downto 0);
 	
 begin
 
 	-- shift register must be rising edge triggered
-	compute_output : process(clock, enable) is
-	
+	compute_output : process(clock) is
 	begin 											-- process body
 	if (enable = '1') then 						-- shift register is enabled
 		if rising_edge(clock) then 			-- rising edge of clock signal
-			if sel = "00" then register_content <= I;
+			if sel = "00" then O <= I;
 			
 			elsif sel = "01" then 
 			register_content(3) <= I(2);
@@ -47,7 +46,7 @@ begin
 	
 	end process compute_output;
 	
-	O <= register_content;					-- CSA for output
+	-- O <= register_content;					-- CSA for output
 	
 end architecture behavioral;
 

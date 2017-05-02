@@ -46,7 +46,8 @@ architecture behavioral of calc_single is
     --   combination circuit to print
     component printer
         port(   en : in std_logic;
-                value: in std_logic_vector(7 downto 0)
+                value: in std_logic_vector(7 downto 0);
+                outp: out std_logic_vector(7 downto 0)
             );
     end component printer;
     
@@ -79,6 +80,7 @@ architecture behavioral of calc_single is
 
     signal op_sel : std_logic_vector(2 downto 0);
     signal write_enable : std_logic := '0';
+    signal print_output : std_logic_vector(7 downto 0);
 	
 begin
 	-- instantiation of component
@@ -94,7 +96,8 @@ begin
                                   en => write_enable
                               );
     adder : add_sub_8 port map( In1 => adder_pos, In2 => adder_neg, Output => adder_out);
-    printModule : printer port map(en=>print_enable,value=>rt_content);
+    printModule : printer port map(en=>print_enable,value=>rs_content,outp=>print_output);
+    outp<=print_output;
 
     branchModule : brancher port map(skip_value=>br_val,clk=>GCLOCK,skip_sel=>skip_sel);
 
@@ -108,7 +111,7 @@ begin
 
     -- MUXES EVERYWHERE
     print_enable <= '1' when ((adder_out = "00000000") and (instr(7)='1') and (instr(6)='1')) else '0'; --pr_enable mux
-    rd <= instr(3 downto 2) when instr(7)='1' else instr(1 downto 0);--rd mux
+    rd <= instr(5 downto 4) when instr(7)='1' else instr(1 downto 0);--rd mux
     
     pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length)) when instr(7)='1' else rt_content;--preadder_neg mux
     adder_neg <= pre_adder_neg_twoscomp when ((pre_adder_neg(7)='0') and (instr(7)='0') and (instr(6)='1')) else pre_adder_neg;

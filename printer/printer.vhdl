@@ -7,17 +7,26 @@ use ieee.std_logic_1164.all;
 
 entity printer is
 	port(   en : in std_logic;
-			value: in std_logic_vector(7 downto 0)
+			value: in std_logic_vector(7 downto 0);
+            outp:  out std_logic_vector(7 downto 0)
 		);
 end printer;
 
 architecture behavioral of printer is	
 begin
+    outp <= value when en='1' else "ZZZZZZZZ";
 	process(en) is begin
         if(en = '1') then
-            for i in 0 to value'LENGTH-1 loop
-                report std_logic'image(value(i)) severity note;
-            end loop;
+            report 
+                std_logic'image(value(7))&
+                std_logic'image(value(6))&
+                std_logic'image(value(5))&
+                std_logic'image(value(4))&
+                std_logic'image(value(3))&
+                std_logic'image(value(2))&
+                std_logic'image(value(1))&
+                std_logic'image(value(0))
+                severity note;
         end if;
 	end process;
 end architecture behavioral;
