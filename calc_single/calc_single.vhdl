@@ -81,6 +81,9 @@ architecture behavioral of calc_single is
     signal op_sel : std_logic_vector(2 downto 0);
     signal write_enable : std_logic := '0';
     signal print_output : std_logic_vector(7 downto 0);
+
+    signal cin : std_logic := '0';
+    signal cout : std_logic := '0';
 	
 begin
 	-- instantiation of component
@@ -95,7 +98,35 @@ begin
                                   rt_content => rt_content,
                                   en => write_enable
                               );
-    adder : add_sub_8 port map( In1 => adder_pos, In2 => adder_neg, Output => adder_out);
+	adder : entity work.adder8 
+        port map(
+            cin => cin,
+            cout => cout,
+            x0 => adder_pos(0), 
+            x1 => adder_pos(1), 
+            x2 => adder_pos(2), 
+            x3 => adder_pos(3), 
+            x4 => adder_pos(4), 
+            x5 => adder_pos(5), 
+            x6 => adder_pos(6), 
+            x7 => adder_pos(7), 
+            y0 => adder_neg(0),
+            y1 => adder_neg(1),
+            y2 => adder_neg(2),
+            y3 => adder_neg(3),
+            y4 => adder_neg(4),
+            y5 => adder_neg(5),
+            y6 => adder_neg(6),
+            y7 => adder_neg(7),
+            r0 => adder_out(0),
+            r1 => adder_out(1),
+            r2 => adder_out(2),
+            r3 => adder_out(3),
+            r4 => adder_out(4),
+            r5 => adder_out(5),
+            r6 => adder_out(6),
+            r7 => adder_out(7)
+        );
     printModule : printer port map(en=>print_enable,value=>rs_content,outp=>print_output);
     outp<=print_output;
 
