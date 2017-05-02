@@ -9,7 +9,7 @@ architecture behavioral of add_sub_8_tb is
 --  Declaration of the component that will be instantiated.
 component add_sub_8
 port(	In1, In2:	in std_logic_vector (7 downto 0);		-- signed 4 bit input 
-			Output : out std_logic_vector(7 downto 0);      -- overflow and underflow signal
+			Output : out std_logic_vector(7 downto 0)      -- overflow and underflow signal
 );
 end component add_sub_8;
 
@@ -19,7 +19,7 @@ signal carry, underflow : std_logic;
 
 begin
 --  Component instantiation.
-add_sub_8_0: add_sub_8 port map (In1 => in1, In2 => in2, Output => output, Carry => carry, Underflow => underflow); 
+add_sub_8_0: add_sub_8 port map (In1 => in1, In2 => in2, Output => output); 
 
 -- Testing process
 test_bench_add_sub_8 : process  is

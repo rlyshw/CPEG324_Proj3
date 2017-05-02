@@ -12,11 +12,18 @@ entity twoscomp is
 end twoscomp;
 
 architecture behavioral of twoscomp is
+
+	-- ALU for 8 bit adding/subtracting/loading immediates
+	component add_sub_8 
+		port(	In1, In2 : in std_logic_vector(7 downto 0);
+					Output : out std_logic_vector(7 downto 0)
+		);
+    end component add_sub_8;
 	
 	signal temp : std_logic_vector(8-1 downto 0);
 begin
 	temp    <= not inp;
-	adder : entity work.add_sub_8 port map( In1 => temp, In2 => "00000001", Output => outp);
+	adder : add_sub_8 port map( In1 => temp, In2 => "00000001", Output => outp);
 	
 end architecture behavioral;
 

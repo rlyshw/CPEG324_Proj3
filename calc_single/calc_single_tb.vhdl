@@ -12,9 +12,16 @@ architecture behavioral of calc_single_tb is
 signal inst,outp : std_logic_vector(7 downto 0);
 signal GCLOCK : std_logic;
 
+component calc_single 
+	port( Inst : in std_logic_vector(7 downto 0);
+		  GCLOCK: in std_logic;
+		  outp : out std_logic_vector(7 downto 0)
+	);
+end component calc_single;
+
 begin
 --  Component instantiation.
-calc_single_0: entity work.calc_single port map (Inst=>inst,GCLOCK=>GCLOCK,outp=>outp); 
+calc_single_0: calc_single port map (Inst=>inst,GCLOCK=>GCLOCK,outp=>outp); 
 
 -- Testing process
 test_bench_calc_single : process  is

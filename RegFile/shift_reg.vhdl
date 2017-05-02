@@ -14,7 +14,7 @@ end shift_reg;
 
 architecture behavioral of shift_reg is
 	
-	signal register_content : std_logic_vector(3 downto 0) := I;
+	signal register_content : std_logic_vector(3 downto 0);
 	
 begin
 
