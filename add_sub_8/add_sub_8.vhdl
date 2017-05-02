@@ -77,7 +77,7 @@ begin
 	
 	elsif ((In1_neg = '1') and (In2_neg = '0')) then 
 		temp_carry := '0';			-- insure that nothing is being carried into the adder
-		for k in 0 to 6 loop
+		for k in 0 to 7 loop
 			adder_contents(k) <= In1(k) xor In2(k) xor temp_carry;
 			temp_carry := ((In1(k) and temp_carry) or (In2(k) and temp_carry) or 
 			(In1(k) and In2(k)));
@@ -89,7 +89,7 @@ begin
 	
 	elsif ((In1_neg = '0') and (In2_neg = '1')) then 
 		temp_carry := '0';			-- insure that nothing is being carried into the adder
-		for k in 0 to 6 loop
+		for k in 0 to 7 loop
 			adder_contents(k) <= In1(k) xor In2(k) xor temp_carry;
 			temp_carry := ((In1(k) and temp_carry) or (In2(k) and temp_carry) or 
 			(In1(k) and In2(k)));
