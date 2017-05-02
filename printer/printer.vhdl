@@ -14,9 +14,11 @@ end printer;
 architecture behavioral of printer is	
 begin
 	process(en) is begin
-		for i in 0 to value'LENGTH loop
-			report std_logic'image(value(i)) severity note;
-		end loop;
+        if(en = '1') then
+            for i in 0 to value'LENGTH loop
+                report std_logic'image(value(i)) severity note;
+            end loop;
+        end if;
 	end process;
 end architecture behavioral;
 

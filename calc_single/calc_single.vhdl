@@ -100,38 +100,41 @@ begin
 
     op_sel <= pre_adder_neg(7)&instr(7 downto 6);
 	
+    -- adder_neg <= pre_adder_neg;
+    write_content <= adder_out;
+
+
     --all the modules defined, wire it up
      calc_process : process(GCLOCK) is begin
+        adder_neg <= pre_adder_neg;
         case instr(7) is --RD_SEL mux
             when '1' => rd <= instr(3 downto 2);
-            when '0' => rd <= instr(1 downto 0);
+                        pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length));
+                        adder_pos <= "00000000";
+
+            when '0' => rd <= instr(1 downto 0); 
+                              adder_pos <= rs_content; 
+                              pre_adder_neg <= rt_content;
+
             when others => rd <= "ZZ";
+                           adder_pos <= "ZZZZZZZZ";
+                           pre_adder_neg <= "ZZZZZZZZ";
         end case;
 
-        case instr(7) is  --adder_pos mux
-            when '0' => adder_pos <= rs_content;
-            when '1' => adder_pos <= "00000000";
-            when others => adder_pos <= "ZZZZZZZZ";
-        end case;
 
-        case instr(7) is --val_sel
-            when '0' => pre_adder_neg <= rt_content;
-            when '1' => pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length)); --immediate value
-            when others => pre_adder_neg <= "ZZZZZZZZ";
-        end case;
 
         case op_sel is -- this is the mux before the adder's negative terminal, it depends on the sign of rt_content
-            when "001" => adder_neg <= pre_adder_neg_twoscomp;
-            when others => adder_neg <= rt_content;
+            when "001" => pre_adder_neg <= pre_adder_neg_twoscomp;
+            when others => null;
         end case;
 
-        if (adder_out = "0000000" and instr(7)='1' and instr(6)='1') then -- print module enable
+        if (adder_out = "00000000" and instr(7)='1' and instr(6)='1') then -- print module enable
             print_enable <= '1';
         else
             print_enable <= '0';
         end if;
 
-        if( rt_content = "0000000000" and instr(7)='1' and instr(6)='1' ) then -- branching mux
+        if( rt_content = "00000000" and instr(7)='1' and instr(6)='1' ) then -- branching mux
             br_val <= adder_out(1 downto 0);
         else 
             br_val <= "00";
@@ -142,7 +145,6 @@ begin
             when '1' => clk <= '0';
             when others => clk <= 'Z';
         end case;
-
     end process;
 
 end architecture behavioral;

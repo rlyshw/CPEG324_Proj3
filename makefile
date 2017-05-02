@@ -2,7 +2,7 @@ test: calc_tb
 
 calc_tb: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/printer.o ./build/brancher.o ./build/twoscomp.o ./build/calc_single.o ./build/calc_single_tb.o 
 	ghdl -e --workdir=./build --ieee=standard calc_single_tb
-	ghdl -r --workdir=./build --ieee=standard calc_single_tb
+	ghdl -r --workdir=./build --ieee=standard calc_single_tb --vcd=calc_single_tb.vcd
 
 ./build/add_sub_8.o: ./add_sub_8/add_sub_8.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./add_sub_8/add_sub_8.vhdl
