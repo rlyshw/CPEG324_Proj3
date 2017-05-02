@@ -31,14 +31,18 @@ end record;
 type pattern_array is array (natural range <>) of pattern_type;
 constant patterns : pattern_array :=
 (
+("10100000", "ZZZZZZZZ", '0'),
+("10100000", "ZZZZZZZZ", '1'), --LI r2 0
 ("10000001", "ZZZZZZZZ", '0'),
-("10000001", "ZZZZZZZZ", '1'),
-("10010001", "ZZZZZZZZ", '0'),
-("10010001", "ZZZZZZZZ", '1'),
+("10000001", "ZZZZZZZZ", '1'), --LI r0 1
+("10010010", "ZZZZZZZZ", '0'),
+("10010010", "ZZZZZZZZ", '1'), --LI r1 2
+("11100001", "ZZZZZZZZ", '0'),
+("11100001", "ZZZZZZZZ", '1'), --BR1 r2 
 ("01000110", "ZZZZZZZZ", '0'),
-("01000110", "ZZZZZZZZ", '1'),
-("11100000", "00000000", '0'),
-("11100000", "00000000", '1')
+("01000110", "ZZZZZZZZ", '1'), --SUB r0 r1 r2 (1-2=-1)
+("11100000", "00000000", '0'), 
+("11100000", "00000000", '1')  --PR r2
 );
 
 
