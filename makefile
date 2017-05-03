@@ -1,3 +1,10 @@
+verify: calc_verify
+
+calc_verify: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/printer.o ./build/brancher.o ./build/twoscomp.o ./build/calc_single.o ./build/calc_single_verification.o 
+	ghdl -e --workdir=./build --ieee=standard calc_single_verification
+	ghdl -r --workdir=./build --ieee=standard calc_single_verification --vcd=calc_single_verification.vcd
+
+
 test: calc_tb
 
 calc_tb: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/printer.o ./build/brancher.o ./build/twoscomp.o ./build/calc_single.o ./build/calc_single_tb.o 
@@ -34,6 +41,9 @@ calc_tb: ./build/add_sub_8.o ./build/InstrFetch.o ./build/RegFile.o ./build/prin
 
 ./build/calc_single_tb.o: ./calc_single/calc_single_tb.vhdl
 	ghdl -a --workdir=./build --ieee=standard ./calc_single/calc_single_tb.vhdl
+
+./build/calc_single_verification.o: ./calc_single/calc_single_verification.vhdl
+	ghdl -a --workdir=./build --ieee=standard ./calc_single/calc_single_verification.vhdl
 
 clean:
 	rm ./build/*.o ./build/*.cf ./build/calc_single_tb

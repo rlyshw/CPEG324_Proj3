@@ -90,7 +90,7 @@ begin
     registerfile : RegFile port map(
                                   rs=>instr(5 downto 4), 
                                   rt=>instr(3 downto 2), 
-                                  rd=>rd, rw=>write_content, clk=>GCLOCK,
+                                  rd=>rd, rw=>write_content, clk=>clk,
                                   rs_content => rs_content,
                                   rt_content => rt_content,
                                   en => write_enable
@@ -110,11 +110,11 @@ begin
     write_enable <= '0' when (instr(6)='1' and instr(7)='1') else '1';
 
     -- MUXES EVERYWHERE
-    print_enable <= '1' when ((adder_out = "00000000") and (instr(7)='1') and (instr(6)='1')) else '0'; --pr_enable mux
+    print_enable <= '1' when ((adder_out = "00000000") and (instr(7)='1') and (instr(6)='1') and (skip_sel='0')) else '0'; --pr_enable mux
     rd <= instr(5 downto 4) when instr(7)='1' else instr(1 downto 0);--rd mux
     
     pre_adder_neg <= std_logic_vector(resize(signed(instr(3 downto 0)), pre_adder_neg'length)) when instr(7)='1' else rt_content;--preadder_neg mux
-    adder_neg <= pre_adder_neg_twoscomp when ((pre_adder_neg(7)='0') and (instr(7)='0') and (instr(6)='1')) else pre_adder_neg;
+    adder_neg <= pre_adder_neg_twoscomp when ((instr(7)='0') and (instr(6)='1')) else pre_adder_neg;
     adder_pos <= "00000000" when instr(7)='1' else rs_content; -- the mux before the positive end of the adder
     br_val <= adder_out(1 downto 0) when ( rs_content = "00000000" and instr(7)='1' and instr(6)='1' ) else "00"; -- branch mux
 
