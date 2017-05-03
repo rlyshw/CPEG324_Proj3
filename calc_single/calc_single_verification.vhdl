@@ -2,10 +2,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 --  A testbench has no ports.
-entity calc_single_tb is
-end calc_single_tb;
+entity calc_single_verification is
+end calc_single_verification;
 
-architecture behavioral of calc_single_tb is
+architecture behavioral of calc_single_verification is
 --  Declaration of the component that will be instantiated.
 
 -- Internal signals (wires for connecting components)
