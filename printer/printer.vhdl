@@ -6,27 +6,52 @@ use ieee.std_logic_1164.all;
 -- bit signed signal vector for result, 1 bit carry(overflow) signal and 1 bit underflow signal
 
 entity printer is
-	port(   en : in std_logic;
+	port( en : in std_logic;
 			value: in std_logic_vector(7 downto 0);
-            outp:  out std_logic_vector(7 downto 0)
+			CLK_Internal : in std_logic;
+			GCLOCK : in std_logic;
+         SSEG_CA : out  STD_LOGIC_VECTOR (7 downto 0);
+         SSEG_AN : out  STD_LOGIC_VECTOR (3 downto 0)
 		);
 end printer;
 
 architecture behavioral of printer is	
+
+component SSD 
+    Port ( Val : in  STD_LOGIC_VECTOR (7 downto 0);
+			  CLK_Internal : in  STD_LOGIC;
+			  Enable : in STD_LOGIC;
+			  Is_neg : in std_logic;
+           SSEG_CA : out  STD_LOGIC_VECTOR (7 downto 0);
+           SSEG_AN : out  STD_LOGIC_VECTOR (3 downto 0));
+end component SSD;
+
+component twoscomp
+	port( inp : in std_logic_vector(7 downto 0);
+		  outp : out std_logic_vector(7 downto 0)
+		);
+end component twoscomp;
+
+
+signal clock_switch : std_logic;
+signal twos_comp_convert : std_logic_vector(7 downto 0);
+signal true_print_val : std_logic_vector(7 downto 0);
+
 begin
-    outp <= value when en='1' else "ZZZZZZZZ";
-	process(en) is begin
+
+print_converter : twoscomp port map(inp => value, outp => twos_comp_convert);
+ssd_display : SSD port map(Val => true_print_val, CLK_Internal => clock_switch, Enable => en, 
+Is_neg => value(7), SSEG_CA => SSEG_CA, SSEG_AN => SSEG_AN);
+
+
+	true_print_val <= value when value(7) = '0' else twos_comp_convert;
+	
+	process(GCLOCK) is begin
         if(en = '1') then
-            report 
-                std_logic'image(value(7))&
-                std_logic'image(value(6))&
-                std_logic'image(value(5))&
-                std_logic'image(value(4))&
-                std_logic'image(value(3))&
-                std_logic'image(value(2))&
-                std_logic'image(value(1))&
-                std_logic'image(value(0))
-                severity note;
+				clock_switch <= CLK_Internal;
+			else
+				clock_switch <= '0';
+				
         end if;
 	end process;
 end architecture behavioral;
